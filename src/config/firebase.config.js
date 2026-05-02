@@ -21,12 +21,12 @@ import { getStorage, connectStorageEmulator } from 'https://www.gstatic.com/fire
 // Substitua com as credenciais do seu projeto Firebase
 // ─────────────────────────────────────────────────────────────────
 const firebaseConfig = {
-  apiKey: "SUA_API_KEY_AQUI",
-  authDomain: "SEU_PROJETO.firebaseapp.com",
-  projectId: "SEU_PROJETO",
-  storageBucket: "SEU_PROJETO.appspot.com",
-  messagingSenderId: "000000000000",
-  appId: "1:000000000000:web:xxxxxxxxxxxxxxxx",
+  apiKey: "AIzaSyAKtmRgoTYJ5v767d9aBBB0esbLfL_U63o",
+  authDomain: "pacientes-gestao.firebaseapp.com",
+  projectId: "pacientes-gestao",
+  storageBucket: "pacientes-gestao.appspot.com",
+  messagingSenderId: "364440519444",
+  appId: "1:364440519444:web:e49a4f6f3cf7a5fc38b801",
 };
 
 // ─────────────────────────────────────────────────────────────────

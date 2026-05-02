@@ -125,25 +125,7 @@ export async function registerUser({ email, password, name, crm, phone, clinicNa
 
     await setDoc(doc(db, COLLECTIONS.USERS, user.uid), userData);
 
-    // 4. Adicionar UID à lista de pendentes do admin
-    const adminRef = doc(db, COLLECTIONS.ADMIN, 'config');
-    const adminDoc = await getDoc(adminRef);
-
-    if (adminDoc.exists()) {
-      await updateDoc(adminRef, {
-        pendingUsers: arrayUnion(user.uid),
-      });
-    } else {
-      // Primeiro registro — pode ser o Super Admin
-      await setDoc(adminRef, {
-        pendingUsers: [user.uid],
-        totalTenants: 0,
-        systemVersion: '1.0.0',
-        maintenanceMode: false,
-      });
-    }
-
-    // 5. Fazer logout imediato (usuário precisa de aprovação)
+    // 4. Fazer logout imediato (usuário precisa de aprovação)
     await signOut(auth);
 
     return { success: true, uid: user.uid };
@@ -391,12 +373,14 @@ export async function approveUser(userId) {
       approvedBy: currentUser.uid,
     });
 
-    // 4. Remover da lista de pendentes e incrementar total
+    // 4. Incrementar total de tenants (criando config se não existir)
     const adminRef = doc(db, COLLECTIONS.ADMIN, 'config');
-    await updateDoc(adminRef, {
-      pendingUsers: arrayRemove(userId),
-      totalTenants: increment(1),
-    });
+    const adminDoc = await getDoc(adminRef);
+    if (adminDoc.exists()) {
+      await updateDoc(adminRef, { totalTenants: increment(1) });
+    } else {
+      await setDoc(adminRef, { totalTenants: 1, systemVersion: '1.0.0' });
+    }
 
     return { success: true };
   } catch (error) {
