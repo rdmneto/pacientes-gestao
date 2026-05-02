@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="OftalmoCare — Painel do Administrador">
+  <title>Admin — OftalmoCare</title>
+  <link rel="stylesheet" href="src/styles/global.css">
+  <link rel="stylesheet" href="src/styles/admin.css">
+</head>
+<body>
+
+  <div id="toast-container" class="toast-container"></div>
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="spinner spinner-lg spinner-primary"></div>
+  </div>
+
+  <div class="admin-layout">
+
+    <!-- Navbar -->
+    <nav class="admin-navbar" id="admin-navbar">
+      <div class="nav-brand">
+        <div class="nav-brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+        <div>
+          <h2>OftalmoCare</h2>
+          <span>Painel de Administração</span>
+        </div>
+      </div>
+      <div class="nav-actions">
+        <div class="nav-user">
+          <div class="nav-avatar" id="nav-avatar">SA</div>
+          <span id="nav-user-name">Super Admin</span>
+        </div>
+        <button class="btn btn-sm btn-secondary" id="logout-btn">Sair</button>
+      </div>
+    </nav>
+
+    <!-- Content -->
+    <main class="admin-content">
+
+      <div class="admin-header">
+        <h1>Gestão de Usuários</h1>
+        <p>Aprove novos médicos e gerencie as contas do sistema.</p>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row" id="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon stat-icon-amber">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div>
+            <div class="stat-value" id="stat-pending">0</div>
+            <div class="stat-label">Aguardando Aprovação</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon stat-icon-teal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div>
+            <div class="stat-value" id="stat-active">0</div>
+            <div class="stat-label">Médicos Ativos</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon stat-icon-red">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+          </div>
+          <div>
+            <div class="stat-value" id="stat-suspended">0</div>
+            <div class="stat-label">Suspensos</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon stat-icon-blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <div>
+            <div class="stat-value" id="stat-total">0</div>
+            <div class="stat-label">Total de Tenants</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="pending" id="tab-pending">
+          Pendentes <span class="tab-count" id="tab-pending-count">0</span>
+        </button>
+        <button class="tab-btn" data-tab="active" id="tab-active">Ativos</button>
+        <button class="tab-btn" data-tab="suspended" id="tab-suspended">Suspensos</button>
+        <button class="tab-btn" data-tab="all" id="tab-all">Todos</button>
+      </div>
+
+      <!-- User List -->
+      <div id="user-list"></div>
+
+    </main>
+  </div>
+
+  <script type="module">
+    import {
+      requireSuperAdmin,
+      logoutUser,
+      getPendingUsers,
+      getAllUsers,
+      approveUser,
+      suspendUser,
+      reactivateUser,
+      getCurrentUserData,
+    } from './src/auth/auth.service.js';
+
+    // ── State ──────────────────────────────────────
+    let allUsers = [];
+    let currentTab = 'pending';
+
+    // ── Init ───────────────────────────────────────
+    async function init() {
+      const userData = await requireSuperAdmin();
+      if (!userData) return; // Redirected
+
+      // Set nav user
+      const initials = userData.name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
+      document.getElementById('nav-avatar').textContent = initials;
+      document.getElementById('nav-user-name').textContent = userData.name;
+
+      await loadUsers();
+      hideLoading();
+    }
+
+    async function loadUsers() {
+      allUsers = await getAllUsers();
+      updateStats();
+      renderUserList();
+    }
+
+    function updateStats() {
+      const pending = allUsers.filter(u => u.status === 'pending');
+      const active = allUsers.filter(u => u.status === 'active' && u.role !== 'super_admin');
+      const suspended = allUsers.filter(u => u.status === 'suspended');
+
+      document.getElementById('stat-pending').textContent = pending.length;
+      document.getElementById('stat-active').textContent = active.length;
+      document.getElementById('stat-suspended').textContent = suspended.length;
+      document.getElementById('stat-total').textContent = active.length;
+      document.getElementById('tab-pending-count').textContent = pending.length;
+
+      // Hide/show pending badge
+      document.getElementById('tab-pending-count').style.display = pending.length > 0 ? '' : 'none';
+    }
+
+    function renderUserList() {
+      const container = document.getElementById('user-list');
+      let filtered;
+
+      switch (currentTab) {
+        case 'pending':
+          filtered = allUsers.filter(u => u.status === 'pending');
+          break;
+        case 'active':
+          filtered = allUsers.filter(u => u.status === 'active');
+          break;
+        case 'suspended':
+          filtered = allUsers.filter(u => u.status === 'suspended');
+          break;
+        default:
+          filtered = [...allUsers];
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+            </svg>
+            <h3>Nenhum usuário encontrado</h3>
+            <p>Não há usuários ${currentTab === 'pending' ? 'aguardando aprovação' : 'nesta categoria'} no momento.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(user => {
+        const initials = user.name ? user.name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase() : '??';
+        const statusBadge = getStatusBadge(user.status);
+        const roleBadge = getRoleBadge(user.role);
+        const date = user.createdAt ? new Date(user.createdAt).toLocaleDateString('pt-BR') : '—';
+        const me = getCurrentUserData();
+        const isSelf = user.uid === me?.uid;
+
+        return `
+          <div class="user-card" data-uid="${user.uid}">
+            <div class="user-info">
+              <div class="user-avatar">${initials}</div>
+              <div class="user-details">
+                <div class="user-name">${user.name || 'Sem nome'}${isSelf ? ' (Você)' : ''}</div>
+                <div class="user-meta">
+                  <span>${user.email}</span>
+                  ${user.crm ? `<span>CRM: ${user.crm}</span>` : ''}
+                  <span>Desde: ${date}</span>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+              ${roleBadge} ${statusBadge}
+              <div class="user-actions">
+                ${getActions(user, isSelf)}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Attach action listeners
+      container.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', handleAction);
+      });
+    }
+
+    function getStatusBadge(status) {
+      const map = {
+        pending: '<span class="badge badge-pending">Pendente</span>',
+        active: '<span class="badge badge-active">Ativo</span>',
+        suspended: '<span class="badge badge-suspended">Suspenso</span>',
+      };
+      return map[status] || '';
+    }
+
+    function getRoleBadge(role) {
+      const map = {
+        super_admin: '<span class="badge badge-admin">Admin</span>',
+        medico: '<span class="badge badge-medico">Médico</span>',
+        atendente: '<span class="badge badge-medico">Atendente</span>',
+      };
+      return map[role] || '';
+    }
+
+    function getActions(user, isSelf) {
+      if (isSelf) return '';
+
+      let html = '';
+      if (user.status === 'pending') {
+        html += `<button class="btn btn-sm btn-success" data-action="approve" data-uid="${user.uid}">✓ Aprovar</button>`;
+      }
+      if (user.status === 'active' && user.role !== 'super_admin') {
+        html += `<button class="btn btn-sm btn-danger" data-action="suspend" data-uid="${user.uid}">Suspender</button>`;
+      }
+      if (user.status === 'suspended') {
+        html += `<button class="btn btn-sm btn-success" data-action="reactivate" data-uid="${user.uid}">Reativar</button>`;
+      }
+      return html;
+    }
+
+    async function handleAction(e) {
+      const action = e.target.dataset.action;
+      const uid = e.target.dataset.uid;
+      const btn = e.target;
+
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div>';
+
+      let result;
+      switch (action) {
+        case 'approve':
+          result = await approveUser(uid);
+          break;
+        case 'suspend':
+          if (!confirm('Deseja realmente suspender este usuário?')) {
+            btn.disabled = false;
+            btn.textContent = 'Suspender';
+            return;
+          }
+          result = await suspendUser(uid);
+          break;
+        case 'reactivate':
+          result = await reactivateUser(uid);
+          break;
+      }
+
+      if (result?.success) {
+        showToast(
+          action === 'approve' ? 'Usuário aprovado com sucesso!' :
+          action === 'suspend' ? 'Usuário suspenso.' :
+          'Usuário reativado!',
+          action === 'suspend' ? 'error' : 'success'
+        );
+        await loadUsers();
+      } else {
+        showToast(result?.error || 'Erro ao processar ação.', 'error');
+        btn.disabled = false;
+      }
+    }
+
+    // ── Tabs ───────────────────────────────────────
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentTab = btn.dataset.tab;
+        renderUserList();
+      });
+    });
+
+    // ── Logout ─────────────────────────────────────
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await logoutUser();
+      window.location.href = 'login.html';
+    });
+
+    // ── Utilities ──────────────────────────────────
+    function hideLoading() {
+      document.getElementById('loading-overlay').classList.add('hidden');
+    }
+
+    function showToast(msg, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.textContent = msg;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+
+    // ── GO ──────────────────────────────────────────
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="OftalmoCare — Acesse sua conta para gerenciar pacientes cirúrgicos oftalmológicos">
+  <title>Login — OftalmoCare</title>
+  <link rel="stylesheet" href="src/styles/global.css">
+  <link rel="stylesheet" href="src/styles/auth.css">
+</head>
+<body>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="loading-overlay hidden">
+    <div class="spinner spinner-lg spinner-primary"></div>
+  </div>
+
+  <main class="auth-page" id="login-page">
+    <div class="auth-card animate-fadeInUp">
+
+      <!-- Logo -->
+      <div class="auth-logo">
+        <div class="auth-logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </div>
+        <h1>OftalmoCare</h1>
+        <p>Gestão de Pacientes Cirúrgicos</p>
+      </div>
+
+      <!-- Login Form -->
+      <form id="login-form" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="login-email">E-mail</label>
+          <input type="email" id="login-email" class="form-input" placeholder="seu@email.com" required autocomplete="email">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="login-password">Senha</label>
+          <div class="input-password-wrap">
+            <input type="password" id="login-password" class="form-input" placeholder="••••••••" required autocomplete="current-password">
+            <button type="button" class="toggle-password" id="toggle-login-pw" aria-label="Mostrar senha">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <a href="#" class="forgot-link" id="forgot-password-link">Esqueceu sua senha?</a>
+
+        <div id="login-error" class="alert alert-danger hidden" role="alert"></div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg" id="login-submit">
+          Entrar
+        </button>
+      </form>
+
+      <!-- Forgot Password Form (toggleable) -->
+      <form id="forgot-form" class="hidden" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="forgot-email">Digite seu e-mail para redefinir a senha</label>
+          <input type="email" id="forgot-email" class="form-input" placeholder="seu@email.com" required>
+        </div>
+
+        <div id="forgot-message" class="hidden" role="alert"></div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="forgot-submit">
+          Enviar link de redefinição
+        </button>
+
+        <div class="auth-footer mt-md">
+          <a href="#" id="back-to-login">← Voltar para o login</a>
+        </div>
+      </form>
+
+      <div class="auth-footer" id="login-footer">
+        Ainda não tem conta? <a href="register.html">Cadastre-se</a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Pending Approval Screen -->
+  <main class="auth-page hidden" id="pending-page">
+    <div class="auth-card pending-card animate-fadeInUp">
+      <div class="pending-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </div>
+      <h2>Conta Aguardando Aprovação</h2>
+      <p class="text-muted mt-md" style="line-height:1.7">
+        Seu cadastro foi recebido com sucesso. O administrador do sistema
+        precisa liberar seu acesso. Você será notificado quando a conta estiver ativa.
+      </p>
+      <button class="btn btn-secondary btn-block mt-lg" onclick="window.location.href='login.html'">
+        Tentar novamente
+      </button>
+    </div>
+  </main>
+
+  <script type="module">
+    import { loginUser, resetPassword, waitForAuth } from './src/auth/auth.service.js';
+
+    // ── Elements ───────────────────────────────────
+    const loginForm = document.getElementById('login-form');
+    const forgotForm = document.getElementById('forgot-form');
+    const loginError = document.getElementById('login-error');
+    const loginPage = document.getElementById('login-page');
+    const pendingPage = document.getElementById('pending-page');
+    const loginFooter = document.getElementById('login-footer');
+    const overlay = document.getElementById('loading-overlay');
+    const toastContainer = document.getElementById('toast-container');
+
+    // ── Check if redirected with pending status ────
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('status') === 'pending') {
+      loginPage.classList.add('hidden');
+      pendingPage.classList.remove('hidden');
+    }
+
+    // ── If already logged in, redirect ─────────────
+    waitForAuth().then(userData => {
+      if (userData && userData.status === 'active') {
+        window.location.href = 'index.html';
+      }
+    });
+
+    // ── Login ──────────────────────────────────────
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      loginError.classList.add('hidden');
+
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+
+      if (!email || !password) {
+        showError(loginError, 'Preencha todos os campos.');
+        return;
+      }
+
+      setLoading(true);
+      const result = await loginUser(email, password);
+      setLoading(false);
+
+      if (result.success) {
+        // Redirecionar baseado no role
+        if (result.userData.role === 'super_admin') {
+          window.location.href = 'admin.html';
+        } else {
+          window.location.href = 'index.html';
+        }
+      } else {
+        if (result.status === 'pending') {
+          loginPage.classList.add('hidden');
+          pendingPage.classList.remove('hidden');
+        } else {
+          showError(loginError, result.error);
+        }
+      }
+    });
+
+    // ── Forgot Password Toggle ─────────────────────
+    document.getElementById('forgot-password-link').addEventListener('click', (e) => {
+      e.preventDefault();
+      loginForm.classList.add('hidden');
+      loginFooter.classList.add('hidden');
+      forgotForm.classList.remove('hidden');
+    });
+
+    document.getElementById('back-to-login').addEventListener('click', (e) => {
+      e.preventDefault();
+      forgotForm.classList.add('hidden');
+      loginForm.classList.remove('hidden');
+      loginFooter.classList.remove('hidden');
+    });
+
+    // ── Forgot Password Submit ─────────────────────
+    forgotForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msgEl = document.getElementById('forgot-message');
+      const email = document.getElementById('forgot-email').value.trim();
+
+      if (!email) {
+        msgEl.className = 'alert alert-danger';
+        msgEl.textContent = 'Digite seu e-mail.';
+        msgEl.classList.remove('hidden');
+        return;
+      }
+
+      setLoading(true);
+      const result = await resetPassword(email);
+      setLoading(false);
+
+      if (result.success) {
+        msgEl.className = 'alert alert-success';
+        msgEl.textContent = 'Link de redefinição enviado! Verifique seu e-mail.';
+      } else {
+        msgEl.className = 'alert alert-danger';
+        msgEl.textContent = result.error;
+      }
+      msgEl.classList.remove('hidden');
+    });
+
+    // ── Toggle Password Visibility ─────────────────
+    document.getElementById('toggle-login-pw').addEventListener('click', () => {
+      const input = document.getElementById('login-password');
+      input.type = input.type === 'password' ? 'text' : 'password';
+    });
+
+    // ── Utilities ──────────────────────────────────
+    function showError(el, msg) {
+      el.textContent = msg;
+      el.classList.remove('hidden');
+    }
+
+    function setLoading(on) {
+      overlay.classList.toggle('hidden', !on);
+      document.querySelectorAll('button[type="submit"]').forEach(b => b.disabled = on);
+    }
+
+    function showToast(msg, type = 'info') {
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.textContent = msg;
+      toastContainer.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+  </script>
+</body>
+</html>

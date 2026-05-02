@@ -1,0 +1,226 @@
+/* ═══════════════════════════════════════════════════════════════
+   OftalmoCare — Agenda & Dashboard BI Styles
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Calendar ─────────────────────────────────────────────────── */
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+.calendar-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.calendar-nav h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  min-width: 180px;
+  text-align: center;
+  text-transform: capitalize;
+}
+.calendar-nav button {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  width: 34px; height: 34px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--duration-fast);
+}
+.calendar-nav button:hover { border-color: var(--primary-500); color: var(--primary-400); }
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+}
+.calendar-weekday {
+  padding: 8px 4px;
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.03);
+}
+.calendar-day {
+  min-height: 80px;
+  padding: 4px;
+  background: var(--bg-card);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--duration-fast);
+  position: relative;
+}
+.calendar-day:hover { background: var(--bg-card-hover); border-color: var(--border-medium); }
+.calendar-day.other-month { opacity: 0.3; }
+.calendar-day.today {
+  border-color: var(--primary-500);
+  background: rgba(15,165,165,0.06);
+}
+.calendar-day-number {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 2px 6px;
+}
+.calendar-day.today .calendar-day-number {
+  color: var(--primary-400);
+  font-weight: 800;
+}
+.calendar-event {
+  padding: 2px 5px;
+  border-radius: 3px;
+  font-size: 0.62rem;
+  font-weight: 500;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.calendar-event.type-cirurgia { background: rgba(245,158,11,0.2); color: var(--warning); }
+.calendar-event.type-laser { background: rgba(59,130,246,0.2); color: var(--info); }
+.calendar-event.type-injecao { background: rgba(167,139,250,0.2); color: #a78bfa; }
+.calendar-event.type-consulta { background: rgba(15,165,165,0.2); color: var(--primary-400); }
+.calendar-event.type-retorno { background: rgba(148,163,184,0.2); color: var(--gray-400); }
+
+/* Day detail sidebar */
+.day-detail {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  margin-top: 1rem;
+  animation: fadeInUp 0.3s var(--ease-out);
+}
+.day-detail-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.appt-card {
+  padding: 0.75rem;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  transition: all var(--duration-fast);
+}
+.appt-card:hover { border-color: var(--border-medium); }
+.appt-time {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--primary-400);
+  min-width: 50px;
+}
+.appt-info { flex: 1; min-width: 0; }
+.appt-info .patient-name { font-size: 0.83rem; }
+.appt-info .patient-meta { font-size: 0.7rem; }
+
+/* ── BI Dashboard ─────────────────────────────────────────────── */
+.bi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--space-md);
+}
+.bi-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  animation: fadeInUp 0.4s var(--ease-out);
+}
+.bi-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.bi-card-header h3 {
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+.bi-card-header .badge { font-size: 0.65rem; }
+.bi-chart-wrap {
+  position: relative;
+  height: 220px;
+}
+.bi-stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 0.85rem;
+}
+.bi-stat-row:last-child { border-bottom: none; }
+.bi-stat-label { color: var(--text-secondary); }
+.bi-stat-value { font-weight: 700; color: var(--text-primary); }
+.bi-stat-value.positive { color: var(--success); }
+.bi-stat-value.negative { color: var(--danger); }
+
+.bi-donut-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 0.75rem;
+  justify-content: center;
+}
+.bi-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+.bi-legend-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Large stat */
+.bi-big-stat {
+  text-align: center;
+  padding: 1rem 0;
+}
+.bi-big-stat .value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1;
+  background: linear-gradient(135deg, var(--primary-400), var(--success));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.bi-big-stat .label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .calendar-day { min-height: 55px; }
+  .calendar-event { font-size: 0.55rem; }
+  .bi-grid { grid-template-columns: 1fr; }
+  .calendar-nav h2 { font-size: 0.9rem; min-width: 140px; }
+}

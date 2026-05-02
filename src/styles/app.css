@@ -1,0 +1,461 @@
+/* ═══════════════════════════════════════════════════════════════
+   OftalmoCare — App Module Styles (Forms, Modals, Patient Views)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Modal ────────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(6px);
+  z-index: 1000;
+  display: none;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1rem;
+  overflow-y: auto;
+}
+.modal-overlay.open { display: flex; }
+.modal-container {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  width: 100%;
+  max-width: 640px;
+  animation: fadeInUp 0.3s var(--ease-out);
+  margin: auto 0;
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.modal-header h2 { font-size: 1.1rem; font-weight: 700; }
+.modal-close {
+  background: none; border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: all var(--duration-fast);
+}
+.modal-close:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+.modal-body { padding: 1.5rem; }
+.modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* ── Section Headers in Forms ──────────────────────────────── */
+.form-section {
+  margin: 1.5rem 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.form-section h3 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary-400);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.form-section h3 svg { width: 16px; height: 16px; opacity: 0.8; }
+.form-section:first-child { margin-top: 0; }
+
+/* ── 3-Column Grid ────────────────────────────────────────── */
+.form-row-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--space-md);
+}
+@media (max-width: 600px) {
+  .form-row-3 { grid-template-columns: 1fr; }
+}
+
+/* ── Conditional Pathology Sections ────────────────────────── */
+.pathology-section {
+  display: none;
+  animation: fadeIn 0.3s var(--ease-out);
+}
+.pathology-section.visible { display: block; }
+
+.pathology-card {
+  background: rgba(15,165,165,0.04);
+  border: 1px solid rgba(15,165,165,0.12);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  margin-top: 1rem;
+}
+.pathology-card-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--primary-400);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Retina Sub-conditions Toggle ──────────────────────────── */
+.retina-sub { display: none; }
+.retina-sub.visible { display: block; animation: fadeIn 0.25s var(--ease-out); }
+
+/* ── Patient List ─────────────────────────────────────────── */
+.patient-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+.search-box {
+  position: relative;
+  flex: 1;
+  max-width: 360px;
+}
+.search-box input {
+  width: 100%;
+  padding: 0.6rem 1rem 0.6rem 2.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.85rem;
+  transition: all var(--duration-normal);
+}
+.search-box input:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(15,165,165,0.12);
+}
+.search-box svg {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px; height: 16px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.filter-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.filter-chip {
+  padding: 0.35rem 0.8rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+.filter-chip:hover { border-color: var(--primary-500); color: var(--text-primary); }
+.filter-chip.active {
+  background: rgba(15,165,165,0.15);
+  border-color: var(--primary-500);
+  color: var(--primary-400);
+  font-weight: 600;
+}
+
+/* ── Patient Cards ────────────────────────────────────────── */
+.patient-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  cursor: pointer;
+  transition: all var(--duration-normal) var(--ease-out);
+}
+.patient-card:hover {
+  border-color: var(--primary-500);
+  background: var(--bg-card-hover);
+  transform: translateX(3px);
+}
+.patient-avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-700), var(--primary-900));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: var(--primary-300);
+  flex-shrink: 0;
+}
+.patient-info { flex: 1; min-width: 0; }
+.patient-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.patient-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+.patient-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* ── Patient Detail View ──────────────────────────────────── */
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.detail-avatar {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-500), var(--primary-800));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #fff;
+}
+.detail-name { font-size: 1.25rem; font-weight: 700; }
+.detail-subtitle { font-size: 0.85rem; color: var(--text-muted); }
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.detail-field label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+.detail-field span {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+/* ── Consultation Timeline ────────────────────────────────── */
+.timeline { position: relative; padding-left: 24px; }
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 7px; top: 0; bottom: 0;
+  width: 2px;
+  background: var(--border-subtle);
+}
+.timeline-item {
+  position: relative;
+  margin-bottom: 1.25rem;
+  animation: fadeInUp 0.3s var(--ease-out);
+}
+.timeline-dot {
+  position: absolute;
+  left: -20px; top: 4px;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--primary-500);
+  border: 2px solid var(--bg-secondary);
+}
+.timeline-dot.surgery { background: var(--warning); }
+.timeline-dot.laser { background: var(--info); }
+.timeline-dot.injection { background: #a78bfa; }
+.timeline-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+.timeline-card:hover { border-color: var(--primary-500); }
+.timeline-date {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.timeline-title {
+  font-weight: 600;
+  font-size: 0.88rem;
+  margin-top: 2px;
+}
+.timeline-badges {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+/* ── Attachment List ──────────────────────────────────────── */
+.attachment-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0.6rem 0.8rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  margin-bottom: 0.5rem;
+  font-size: 0.83rem;
+  transition: all var(--duration-fast);
+}
+.attachment-item:hover { border-color: var(--border-medium); }
+.attachment-icon {
+  width: 32px; height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+.attachment-icon.pdf { background: rgba(239,68,68,0.12); color: var(--danger); }
+.attachment-icon.img { background: rgba(59,130,246,0.12); color: var(--info); }
+.attachment-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.attachment-size { color: var(--text-muted); font-size: 0.75rem; flex-shrink: 0; }
+
+/* Upload Area */
+.upload-area {
+  border: 2px dashed var(--border-medium);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--duration-normal);
+  color: var(--text-muted);
+}
+.upload-area:hover, .upload-area.dragover {
+  border-color: var(--primary-500);
+  background: rgba(15,165,165,0.04);
+  color: var(--primary-400);
+}
+.upload-area svg { width: 32px; height: 32px; margin: 0 auto 0.5rem; opacity: 0.5; }
+.upload-progress {
+  height: 4px;
+  background: var(--bg-card);
+  border-radius: 2px;
+  margin-top: 1rem;
+  overflow: hidden;
+}
+.upload-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-500), var(--primary-400));
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.3s;
+}
+
+/* ── Snellen Input Helper ─────────────────────────────────── */
+.snellen-helper {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+.snellen-chip {
+  padding: 2px 8px;
+  font-size: 0.68rem;
+  border-radius: var(--radius-full);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+.snellen-chip:hover {
+  border-color: var(--primary-500);
+  color: var(--primary-400);
+}
+
+/* ── Tabs inside modals ───────────────────────────────────── */
+.detail-tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 1.25rem;
+  background: rgba(255,255,255,0.03);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  border: 1px solid var(--border-subtle);
+}
+.detail-tab {
+  flex: 1;
+  padding: 0.5rem;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  text-align: center;
+  transition: all var(--duration-fast);
+}
+.detail-tab:hover { color: var(--text-primary); }
+.detail-tab.active {
+  background: rgba(15,165,165,0.12);
+  color: var(--primary-400);
+  font-weight: 600;
+}
+.detail-pane { display: none; animation: fadeIn 0.25s var(--ease-out); }
+.detail-pane.active { display: block; }
+
+/* Checkbox styled */
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.35rem 0.7rem;
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+.checkbox-label:hover { border-color: var(--primary-500); }
+.checkbox-label input[type="checkbox"] { accent-color: var(--primary-500); }
+.checkbox-label:has(input:checked) {
+  background: rgba(15,165,165,0.1);
+  border-color: var(--primary-500);
+  color: var(--primary-400);
+}

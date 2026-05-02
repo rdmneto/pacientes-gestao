@@ -1,0 +1,66 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ─────────────────────────────────────────────
+    // FUNÇÕES AUXILIARES
+    // ─────────────────────────────────────────────
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Tamanho máximo de arquivo: 50MB
+    function isValidFileSize() {
+      return request.resource.size <= 50 * 1024 * 1024;
+    }
+
+    // Tipos MIME permitidos para anexos médicos
+    function isValidMimeType() {
+      return request.resource.contentType.matches('application/pdf') ||
+             request.resource.contentType.matches('image/jpeg') ||
+             request.resource.contentType.matches('image/png') ||
+             request.resource.contentType.matches('image/tiff') ||
+             request.resource.contentType.matches('image/dicom') ||
+             request.resource.contentType.matches('image/webp');
+    }
+
+    // ─────────────────────────────────────────────
+    // REGRA: arquivos de pacientes organizados por tenant
+    // Caminho: /{tenantId}/patients/{patientId}/{filename}
+    // ─────────────────────────────────────────────
+    match /{tenantId}/patients/{patientId}/{allPaths=**} {
+      // Leitura: apenas usuários autenticados do mesmo tenant
+      allow read: if isAuthenticated() &&
+                     request.auth.token.tenantId == tenantId;
+
+      // Upload: verificar tamanho e tipo
+      allow create: if isAuthenticated() &&
+                       request.auth.token.tenantId == tenantId &&
+                       isValidFileSize() &&
+                       isValidMimeType();
+
+      // Substituição de arquivo: mesmo tenant
+      allow update: if isAuthenticated() &&
+                       request.auth.token.tenantId == tenantId &&
+                       isValidFileSize() &&
+                       isValidMimeType();
+
+      // Exclusão: apenas usuários do mesmo tenant
+      allow delete: if isAuthenticated() &&
+                       request.auth.token.tenantId == tenantId;
+    }
+
+    // ─────────────────────────────────────────────
+    // REGRA: avatares dos usuários
+    // Caminho: /avatars/{userId}/{filename}
+    // ─────────────────────────────────────────────
+    match /avatars/{userId}/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() &&
+                      request.auth.uid == userId &&
+                      request.resource.size <= 5 * 1024 * 1024 &&
+                      request.resource.contentType.matches('image/.*');
+    }
+  }
+}

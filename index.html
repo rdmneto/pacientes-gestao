@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="OftalmoCare — Dashboard de Gestão de Pacientes Cirúrgicos Oftalmológicos">
+  <title>OftalmoCare — Dashboard</title>
+  <link rel="stylesheet" href="src/styles/global.css">
+  <link rel="stylesheet" href="src/styles/admin.css">
+  <link rel="stylesheet" href="src/styles/app.css">
+  <link rel="stylesheet" href="src/styles/agenda-bi.css">
+  <style>
+    /* ── App Shell Layout ─────────────────────── */
+    .app-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      grid-template-rows: auto 1fr;
+      min-height: 100vh;
+    }
+    .app-layout > .admin-navbar {
+      grid-column: 1 / -1;
+    }
+
+    /* ── Sidebar ──────────────────────────────── */
+    .sidebar {
+      background: rgba(15, 22, 38, 0.95);
+      border-right: 1px solid var(--border-subtle);
+      padding: 1.5rem 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow-y: auto;
+    }
+    .sidebar-section {
+      padding: 0 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+    .sidebar-section-label {
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      padding: 0.5rem 0.75rem;
+    }
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0.6rem 0.75rem;
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: all var(--duration-fast);
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .sidebar-link:hover {
+      background: rgba(255,255,255,0.05);
+      color: var(--text-primary);
+    }
+    .sidebar-link.active {
+      background: rgba(15,165,165,0.12);
+      color: var(--primary-400);
+    }
+    .sidebar-link svg {
+      width: 18px; height: 18px;
+      flex-shrink: 0;
+      opacity: 0.7;
+    }
+    .sidebar-link.active svg { opacity: 1; }
+    .sidebar-badge {
+      margin-left: auto;
+      background: var(--primary-600);
+      color: #fff;
+      font-size: 0.65rem;
+      padding: 1px 6px;
+      border-radius: var(--radius-full);
+      font-weight: 700;
+    }
+
+    /* ── Main Content ─────────────────────────── */
+    .main-content {
+      padding: 2rem;
+      overflow-y: auto;
+    }
+
+    /* ── Welcome ──────────────────────────────── */
+    .welcome-section {
+      margin-bottom: 2rem;
+      animation: fadeInUp 0.5s var(--ease-out);
+    }
+    .welcome-section h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin-bottom: 0.3rem;
+    }
+    .welcome-section h1 span {
+      background: linear-gradient(135deg, var(--primary-400), var(--primary-300));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .welcome-section p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* ── Quick Actions ────────────────────────── */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: var(--space-md);
+      margin-bottom: 2rem;
+    }
+    .quick-action-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      cursor: pointer;
+      transition: all var(--duration-normal) var(--ease-out);
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      animation: fadeInUp 0.5s var(--ease-out);
+    }
+    .quick-action-card:hover {
+      border-color: var(--primary-500);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-glow);
+    }
+    .quick-action-icon {
+      width: 44px; height: 44px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0.75rem;
+    }
+    .quick-action-icon svg { width: 22px; height: 22px; }
+    .quick-action-card h3 {
+      font-size: 0.95rem;
+      margin-bottom: 4px;
+    }
+    .quick-action-card p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* Page section containers */
+    .page-section { display: none; }
+    .page-section.active { display: block; animation: fadeIn 0.3s var(--ease-out); }
+
+    /* ── Mobile Sidebar ───────────────────────── */
+    .sidebar-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      cursor: pointer;
+      padding: 4px;
+    }
+    @media (max-width: 768px) {
+      .app-layout { grid-template-columns: 1fr; }
+      .sidebar {
+        position: fixed;
+        left: -260px;
+        top: 52px;
+        bottom: 0;
+        width: 240px;
+        z-index: 200;
+        transition: left var(--duration-normal) var(--ease-out);
+      }
+      .sidebar.open { left: 0; }
+      .sidebar-toggle { display: block; }
+      .sidebar-overlay {
+        position: fixed;
+        inset: 0;
+        top: 52px;
+        background: rgba(0,0,0,0.5);
+        z-index: 199;
+        display: none;
+      }
+      .sidebar-overlay.open { display: block; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="toast-container" class="toast-container"></div>
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="spinner spinner-lg spinner-primary"></div>
+  </div>
+
+  <div class="app-layout">
+
+    <!-- Navbar -->
+    <nav class="admin-navbar">
+      <div class="nav-brand" style="display:flex; align-items:center; gap:10px;">
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div class="nav-brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+        <div>
+          <h2>OftalmoCare</h2>
+        </div>
+      </div>
+      <div class="nav-actions">
+        <div class="nav-user">
+          <div class="nav-avatar" id="nav-avatar">--</div>
+          <span id="nav-user-name" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+        </div>
+        <button class="btn btn-sm btn-secondary" id="logout-btn">Sair</button>
+      </div>
+    </nav>
+
+    <!-- Mobile Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Principal</div>
+        <a class="sidebar-link active" data-page="dashboard" href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </a>
+        <a class="sidebar-link" data-page="patients" href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          Pacientes
+        </a>
+        <a class="sidebar-link" data-page="consultations" href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Prontuário
+        </a>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Gestão</div>
+        <a class="sidebar-link" data-page="agenda" href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Agenda
+        </a>
+        <a class="sidebar-link" data-page="whatsapp" href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          WhatsApp
+        </a>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Análises</div>
+        <a class="sidebar-link" data-page="bi" href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Dashboard BI
+        </a>
+      </div>
+      <div class="sidebar-section" id="admin-sidebar-section" style="display:none;">
+        <div class="sidebar-section-label">Administração</div>
+        <a class="sidebar-link" href="admin.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Painel Admin
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content" id="main-content">
+
+      <!-- Dashboard Page -->
+      <div class="page-section active" id="page-dashboard">
+        <div class="welcome-section">
+          <h1>Bem-vindo, <span id="welcome-name">Doutor</span></h1>
+          <p id="welcome-date"></p>
+        </div>
+
+        <div class="quick-actions">
+          <a class="quick-action-card" data-page="patients" href="#">
+            <div class="quick-action-icon stat-icon-teal">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+            </div>
+            <h3>Novo Paciente</h3>
+            <p>Cadastrar paciente no sistema</p>
+          </a>
+
+          <a class="quick-action-card" data-page="consultations" href="#">
+            <div class="quick-action-icon stat-icon-blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            </div>
+            <h3>Nova Evolução</h3>
+            <p>Registrar consulta ou cirurgia</p>
+          </a>
+
+          <a class="quick-action-card" data-page="agenda" href="#">
+            <div class="quick-action-icon stat-icon-amber">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <h3>Agenda</h3>
+            <p>Ver agenda cirúrgica</p>
+          </a>
+
+          <a class="quick-action-card" data-page="bi" href="#">
+            <div class="quick-action-icon" style="background:rgba(139,92,246,0.12);color:#a78bfa;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            </div>
+            <h3>Dashboard BI</h3>
+            <p>Estatísticas e desfechos clínicos</p>
+          </a>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Atividade Recente</h3>
+          </div>
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <h3>Nenhuma atividade ainda</h3>
+            <p>Comece cadastrando seu primeiro paciente.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Patients Page (live) -->
+      <div class="page-section" id="page-patients"></div>
+
+      <!-- Consultations Page -->
+      <div class="page-section" id="page-consultations">
+        <div class="welcome-section"><h1>Prontuário</h1><p>Selecione um paciente na lista para ver seu histórico, ou crie uma nova evolução.</p></div>
+        <div style="display:flex;gap:10px;margin-bottom:1.5rem">
+          <button class="btn btn-primary" id="btn-new-consult-global">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nova Evolução
+          </button>
+        </div>
+        <div class="card"><div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><h3>Registrar evoluções</h3><p>Acesse a lista de pacientes e clique no ícone de documento para registrar uma evolução.</p></div></div>
+      </div>
+
+      <!-- Agenda Page (live) -->
+      <div class="page-section" id="page-agenda"></div>
+
+      <!-- WhatsApp Page (live) -->
+      <div class="page-section" id="page-whatsapp"></div>
+
+      <!-- Dashboard BI Page (live) -->
+      <div class="page-section" id="page-bi"></div>
+
+    </main>
+  </div>
+
+  <script type="module">
+    import { requireAuth, logoutUser, getCurrentUserData, isSuperAdmin } from './src/auth/auth.service.js';
+    import { initPatientList, refreshPatientList } from './src/components/patient-list.js';
+    import { openPatientForm } from './src/components/patient-form.js';
+    import { openConsultationForm } from './src/components/consultation-form.js';
+    import { openPatientDetail } from './src/components/patient-detail.js';
+    import { getPatientById } from './src/api/patients.service.js';
+    import { initAgenda } from './src/components/agenda.js';
+    import { initDashboardBI } from './src/components/dashboard-bi.js';
+    import { initWhatsApp } from './src/components/whatsapp.js';
+
+    let patientsInitialized = false;
+    let agendaInitialized = false;
+    let biInitialized = false;
+    let waInitialized = false;
+
+    // ── Init ───────────────────────────────────
+    async function init() {
+      const userData = await requireAuth();
+      if (!userData) return;
+
+      const firstName = userData.name?.split(' ')[0] || 'Doutor';
+      const initials = userData.name ? userData.name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase() : '--';
+      document.getElementById('nav-avatar').textContent = initials;
+      document.getElementById('nav-user-name').textContent = userData.name || '';
+      document.getElementById('welcome-name').textContent = firstName;
+
+      const now = new Date();
+      document.getElementById('welcome-date').textContent = now.toLocaleDateString('pt-BR', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+      if (isSuperAdmin()) {
+        document.getElementById('admin-sidebar-section').style.display = '';
+      }
+
+      document.getElementById('loading-overlay').classList.add('hidden');
+    }
+
+    // ── Initialize Patients Module ─────────────
+    function ensurePatientsInit() {
+      if (patientsInitialized) return;
+      patientsInitialized = true;
+      const container = document.getElementById('page-patients');
+      initPatientList(container, {
+        onSelect: (patientId) => {
+          openPatientDetail(patientId, {
+            onEdit: (id) => openPatientForm(id, () => refreshPatientList(container)),
+            onNewConsultation: async (id, name) => {
+              if (!name) { const p = await getPatientById(id); name = p?.name || ''; }
+              openConsultationForm(id, name, () => refreshPatientList(container));
+            },
+          });
+        },
+        onNew: () => openPatientForm(null, () => refreshPatientList(container)),
+        onNewConsultation: async (patientId) => {
+          const p = await getPatientById(patientId);
+          openConsultationForm(patientId, p?.name || '', () => refreshPatientList(container));
+        },
+      });
+    }
+
+    // ── Navigation ─────────────────────────────
+    document.querySelectorAll('[data-page]').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        navigateTo(link.dataset.page);
+      });
+    });
+
+    function navigateTo(page) {
+      document.querySelectorAll('.sidebar-link[data-page]').forEach(l => l.classList.remove('active'));
+      const activeLink = document.querySelector(`.sidebar-link[data-page="${page}"]`);
+      if (activeLink) activeLink.classList.add('active');
+
+      document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+      const target = document.getElementById(`page-${page}`);
+      if (target) target.classList.add('active');
+
+      // Lazy-init modules
+      if (page === 'patients') ensurePatientsInit();
+      if (page === 'agenda' && !agendaInitialized) { agendaInitialized = true; initAgenda(document.getElementById('page-agenda')); }
+      if (page === 'bi' && !biInitialized) { biInitialized = true; initDashboardBI(document.getElementById('page-bi')); }
+      if (page === 'whatsapp' && !waInitialized) { waInitialized = true; initWhatsApp(document.getElementById('page-whatsapp')); }
+
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('sidebar-overlay').classList.remove('open');
+    }
+
+    // ── Global new consultation button ─────────
+    document.getElementById('btn-new-consult-global')?.addEventListener('click', () => {
+      openConsultationForm();
+    });
+
+    // ── Mobile Sidebar Toggle ──────────────────
+    document.getElementById('sidebar-toggle').addEventListener('click', () => {
+      document.getElementById('sidebar').classList.toggle('open');
+      document.getElementById('sidebar-overlay').classList.toggle('open');
+    });
+    document.getElementById('sidebar-overlay').addEventListener('click', () => {
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('sidebar-overlay').classList.remove('open');
+    });
+
+    // ── Logout ─────────────────────────────────
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await logoutUser();
+      window.location.href = 'login.html';
+    });
+
+    init();
+  </script>
+</body>
+</html>

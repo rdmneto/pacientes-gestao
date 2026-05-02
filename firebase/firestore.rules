@@ -1,0 +1,159 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─────────────────────────────────────────────
+    // FUNÇÕES AUXILIARES
+    // ─────────────────────────────────────────────
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isSuperAdmin() {
+      return isAuthenticated() && getUserData().role == 'super_admin';
+    }
+
+    function isActiveUser() {
+      return isAuthenticated() && getUserData().status == 'active';
+    }
+
+    function getUserTenantId() {
+      return getUserData().tenantId;
+    }
+
+    function belongsToTenant(tenantId) {
+      return isActiveUser() && getUserTenantId() == tenantId;
+    }
+
+    // ─────────────────────────────────────────────
+    // COLEÇÃO: users
+    // ─────────────────────────────────────────────
+    match /users/{userId} {
+      // Leitura: próprio usuário ou super_admin
+      allow read: if isAuthenticated() && 
+                     (request.auth.uid == userId || isSuperAdmin());
+
+      // Criação: qualquer usuário autenticado pode se registrar
+      // (status inicial = "pending", definido no frontend)
+      allow create: if isAuthenticated() &&
+                       request.auth.uid == userId &&
+                       request.resource.data.status == 'pending' &&
+                       request.resource.data.uid == request.auth.uid;
+
+      // Atualização: apenas super_admin pode alterar status/role
+      // Próprio usuário pode atualizar seus dados pessoais (não o status)
+      allow update: if isSuperAdmin() ||
+                       (isAuthenticated() &&
+                        request.auth.uid == userId &&
+                        !('status' in request.resource.data.diff(resource.data).affectedKeys()) &&
+                        !('role' in request.resource.data.diff(resource.data).affectedKeys()));
+
+      // Exclusão: apenas super_admin
+      allow delete: if isSuperAdmin();
+    }
+
+    // ─────────────────────────────────────────────
+    // COLEÇÃO: tenants
+    // ─────────────────────────────────────────────
+    match /tenants/{tenantId} {
+      // Leitura: owner do tenant ou super_admin
+      allow read: if isSuperAdmin() || belongsToTenant(tenantId);
+
+      // Criação: apenas super_admin (ao aprovar um médico)
+      allow create: if isSuperAdmin();
+
+      // Atualização: owner pode atualizar suas próprias configurações
+      allow update: if isSuperAdmin() || 
+                       (isActiveUser() && getUserTenantId() == tenantId &&
+                        !('plan' in request.resource.data.diff(resource.data).affectedKeys()) &&
+                        !('ownerUid' in request.resource.data.diff(resource.data).affectedKeys()));
+
+      allow delete: if isSuperAdmin();
+    }
+
+    // ─────────────────────────────────────────────
+    // COLEÇÃO: patients
+    // ─────────────────────────────────────────────
+    match /patients/{patientId} {
+      allow read: if belongsToTenant(resource.data.tenantId);
+
+      allow create: if isActiveUser() &&
+                       request.resource.data.tenantId == getUserTenantId() &&
+                       request.resource.data.keys().hasAll(['name', 'cpf', 'birthDate', 'tenantId', 'status', 'createdAt', 'createdBy']);
+
+      allow update: if belongsToTenant(resource.data.tenantId) &&
+                       request.resource.data.tenantId == resource.data.tenantId; // tenantId imutável
+
+      allow delete: if belongsToTenant(resource.data.tenantId);
+    }
+
+    // ─────────────────────────────────────────────
+    // COLEÇÃO: consultations
+    // ─────────────────────────────────────────────
+    match /consultations/{consultationId} {
+      allow read: if belongsToTenant(resource.data.tenantId);
+
+      allow create: if isActiveUser() &&
+                       request.resource.data.tenantId == getUserTenantId() &&
+                       request.resource.data.keys().hasAll(['patientId', 'type', 'date', 'pathology', 'eye', 'tenantId', 'createdAt', 'createdBy']);
+
+      allow update: if belongsToTenant(resource.data.tenantId) &&
+                       request.resource.data.tenantId == resource.data.tenantId;
+
+      allow delete: if belongsToTenant(resource.data.tenantId);
+    }
+
+    // ─────────────────────────────────────────────
+    // COLEÇÃO: appointments
+    // ─────────────────────────────────────────────
+    match /appointments/{appointmentId} {
+      allow read: if belongsToTenant(resource.data.tenantId);
+
+      allow create: if isActiveUser() &&
+                       request.resource.data.tenantId == getUserTenantId() &&
+                       request.resource.data.keys().hasAll(['patientId', 'type', 'dateTime', 'status', 'tenantId', 'createdAt', 'createdBy']);
+
+      allow update: if belongsToTenant(resource.data.tenantId) &&
+                       request.resource.data.tenantId == resource.data.tenantId;
+
+      allow delete: if belongsToTenant(resource.data.tenantId);
+    }
+
+    // ─────────────────────────────────────────────
+    // COLEÇÃO: attachments
+    // ─────────────────────────────────────────────
+    match /attachments/{attachmentId} {
+      allow read: if belongsToTenant(resource.data.tenantId);
+
+      allow create: if isActiveUser() &&
+                       request.resource.data.tenantId == getUserTenantId();
+
+      allow update: if belongsToTenant(resource.data.tenantId);
+
+      allow delete: if belongsToTenant(resource.data.tenantId);
+    }
+
+    // ─────────────────────────────────────────────
+    // COLEÇÃO: whatsapp_logs
+    // ─────────────────────────────────────────────
+    match /whatsapp_logs/{logId} {
+      // Apenas leitura para o tenant; criação e deleção apenas internamente
+      allow read: if belongsToTenant(resource.data.tenantId);
+      allow create: if isActiveUser() &&
+                       request.resource.data.tenantId == getUserTenantId();
+      allow update, delete: if isSuperAdmin();
+    }
+
+    // ─────────────────────────────────────────────
+    // COLEÇÃO: admin (configurações globais)
+    // ─────────────────────────────────────────────
+    match /admin/{document} {
+      allow read, write: if isSuperAdmin();
+    }
+  }
+}

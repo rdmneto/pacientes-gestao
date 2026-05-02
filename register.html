@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Crie sua conta no OftalmoCare — Sistema de Gestão Oftalmológica">
+  <title>Cadastro — OftalmoCare</title>
+  <link rel="stylesheet" href="src/styles/global.css">
+  <link rel="stylesheet" href="src/styles/auth.css">
+</head>
+<body>
+
+  <div id="toast-container" class="toast-container"></div>
+  <div id="loading-overlay" class="loading-overlay hidden">
+    <div class="spinner spinner-lg spinner-primary"></div>
+  </div>
+
+  <!-- Register Form -->
+  <main class="auth-page" id="register-page">
+    <div class="auth-card animate-fadeInUp" style="max-width: 500px;">
+
+      <div class="auth-logo">
+        <div class="auth-logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </div>
+        <h1>OftalmoCare</h1>
+        <p>Crie sua conta de médico</p>
+      </div>
+
+      <form id="register-form" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="reg-name">Nome Completo *</label>
+          <input type="text" id="reg-name" class="form-input" placeholder="Dr(a). Nome Sobrenome" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="reg-crm">CRM</label>
+            <input type="text" id="reg-crm" class="form-input" placeholder="00000-UF">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="reg-phone">Telefone</label>
+            <input type="tel" id="reg-phone" class="form-input" placeholder="(85) 99999-0000">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reg-clinic">Nome da Clínica / Consultório</label>
+          <input type="text" id="reg-clinic" class="form-input" placeholder="Clínica Visão Premium">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reg-email">E-mail *</label>
+          <input type="email" id="reg-email" class="form-input" placeholder="seu@email.com" required autocomplete="email">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reg-password">Senha *</label>
+          <div class="input-password-wrap">
+            <input type="password" id="reg-password" class="form-input" placeholder="Mínimo 6 caracteres" required minlength="6" autocomplete="new-password">
+            <button type="button" class="toggle-password" id="toggle-reg-pw" aria-label="Mostrar senha">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <span class="form-hint">Mínimo de 6 caracteres</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reg-password-confirm">Confirmar Senha *</label>
+          <div class="input-password-wrap">
+            <input type="password" id="reg-password-confirm" class="form-input" placeholder="Repita a senha" required autocomplete="new-password">
+          </div>
+        </div>
+
+        <div id="register-error" class="alert alert-danger hidden"></div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg" id="register-submit">
+          Criar Conta
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        Já tem conta? <a href="login.html">Faça login</a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Success Screen -->
+  <main class="auth-page hidden" id="success-page">
+    <div class="auth-card pending-card animate-fadeInUp">
+      <div class="pending-icon" style="background:rgba(16,185,129,0.12)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="36" height="36">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      </div>
+      <h2>Cadastro Realizado!</h2>
+      <p class="text-muted mt-md" style="line-height:1.7">
+        Sua conta foi criada com sucesso. O administrador do sistema será notificado
+        e aprovará seu acesso em breve. Você receberá um aviso quando puder entrar.
+      </p>
+      <a href="login.html" class="btn btn-primary btn-block mt-lg">Ir para o Login</a>
+    </div>
+  </main>
+
+  <script type="module">
+    import { registerUser } from './src/auth/auth.service.js';
+
+    const form = document.getElementById('register-form');
+    const errorEl = document.getElementById('register-error');
+    const registerPage = document.getElementById('register-page');
+    const successPage = document.getElementById('success-page');
+    const overlay = document.getElementById('loading-overlay');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorEl.classList.add('hidden');
+
+      const name = document.getElementById('reg-name').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const password = document.getElementById('reg-password').value;
+      const confirmPw = document.getElementById('reg-password-confirm').value;
+      const crm = document.getElementById('reg-crm').value.trim();
+      const phone = document.getElementById('reg-phone').value.trim();
+      const clinicName = document.getElementById('reg-clinic').value.trim();
+
+      // Validações
+      if (!name || !email || !password) {
+        showError('Preencha todos os campos obrigatórios (*).');
+        return;
+      }
+      if (password.length < 6) {
+        showError('A senha deve ter no mínimo 6 caracteres.');
+        return;
+      }
+      if (password !== confirmPw) {
+        showError('As senhas não coincidem.');
+        return;
+      }
+
+      setLoading(true);
+      const result = await registerUser({ email, password, name, crm, phone, clinicName });
+      setLoading(false);
+
+      if (result.success) {
+        registerPage.classList.add('hidden');
+        successPage.classList.remove('hidden');
+      } else {
+        showError(result.error);
+      }
+    });
+
+    // Toggle password
+    document.getElementById('toggle-reg-pw').addEventListener('click', () => {
+      const input = document.getElementById('reg-password');
+      input.type = input.type === 'password' ? 'text' : 'password';
+    });
+
+    function showError(msg) {
+      errorEl.textContent = msg;
+      errorEl.classList.remove('hidden');
+    }
+
+    function setLoading(on) {
+      overlay.classList.toggle('hidden', !on);
+      document.getElementById('register-submit').disabled = on;
+    }
+  </script>
+</body>
+</html>
