@@ -6,7 +6,7 @@
  * ═══════════════════════════════════════════════════════════════════
  */
 
-import { auth, db } from '../config/firebase.config.js';
+import { auth, db } from '../config/firebase.config.js?v=2';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
